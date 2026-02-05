@@ -1,0 +1,110 @@
+/* Google Fonts - Bungee Family */
+@import url('https://fonts.googleapis.com/css2?family=Bungee&family=Bungee+Hairline&family=Bungee+Inline&family=Bungee+Outline&family=Bungee+Shade&family=Caveat:wght@500&family=Inter:wght@400;500;600&display=swap');
+
+/* Photo Filter Effect - Optional */
+.plant-photo-filter {
+  filter: saturate(0.75) contrast(1.05) brightness(0.98);
+}
+
+/* Custom Slider Styling */
+[data-slot="slider-track"] {
+  background-color: #e8dcc8 !important;
+  height: 6px !important;
+  border-radius: 3px;
+}
+
+[data-slot="slider-range"] {
+  background-color: #d97706 !important;
+}
+
+[data-slot="slider-thumb"] {
+  background-color: #d97706 !important;
+  border: 2px solid white !important;
+  width: 20px !important;
+  height: 20px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+[data-slot="slider-thumb"]:hover {
+  transform: scale(1.1);
+}
+
+/* Radio Group Styling */
+[data-state="checked"] {
+  background-color: #375484;
+  color: #FEF4E0;
+}
+
+/* Button Hover Effects */
+button {
+  transition: all 0.2s ease-out;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* Cover Container Shadow */
+.cover-container {
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.4);
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FEF4E0;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #e8dcc8;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #d97706;
+}
+
+/* Input focus states */
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: #d97706 !important;
+  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2) !important;
+}
+
+/* Selection color */
+::selection {
+  background-color: #d97706;
+  color: white;
+}
+
+/* Checkbox styling */
+input[type="checkbox"] {
+  accent-color: #d97706;
+}
+
+/* Product cards hover */
+.product-card {
+  transition: all 0.2s ease-out;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Gallery cards */
+.gallery-card {
+  transition: all 0.2s ease-out;
+}
+
+.gallery-card:hover {
+  transform: scale(1.02);
+}
