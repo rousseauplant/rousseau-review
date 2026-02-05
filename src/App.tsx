@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Camera, Droplets, Thermometer, Wind, Sun, Share2, Flag, ChevronDown, ChevronUp, ShoppingBag, Sparkles } from 'lucide-react';
+import { Camera, Droplets, Thermometer, Sun, Share2, Flag, ChevronDown, ChevronUp, ShoppingBag, Sparkles } from 'lucide-react';
 import { Button } from './components/ui/button';
 import { Input } from './components/ui/input';
 import { Label } from './components/ui/label';
@@ -265,7 +265,7 @@ export default function App() {
             cover_data_url: coverDataUrl,
           };
 
-          await supabase.from('covers').insert(coverData);
+          await supabase.from('covers').insert(coverData as any);
           fetchCovers();
         }
       }
@@ -312,7 +312,7 @@ export default function App() {
       await supabase.from('reports').insert({
         cover_id: selectedCover.id,
         reason: reportReason,
-      });
+      } as any);
       
       // Check report count
       const { count } = await supabase
@@ -321,7 +321,7 @@ export default function App() {
         .eq('cover_id', selectedCover.id);
       
       if (count && count >= 2) {
-        await supabase.from('covers').update({ hidden: true }).eq('id', selectedCover.id);
+        await supabase.from('covers').update({ hidden: true } as any).eq('id', selectedCover.id);
       }
       
       setReportDialogOpen(false);
