@@ -321,7 +321,7 @@ export default function App() {
         .eq('cover_id', selectedCover.id);
       
       if (count && count >= 2) {
-        await supabase.from('covers').update({ hidden: true } as any).eq('id', selectedCover.id);
+        await (supabase.from('covers').update({ hidden: true } as any).eq('id', selectedCover.id) as any);
       }
       
       setReportDialogOpen(false);
