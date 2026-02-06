@@ -4,40 +4,41 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: 48 100% 96%;
-  --foreground: 24 10% 10%;
-  --card: 0 0% 100%;
-  --card-foreground: 24 10% 10%;
-  --primary: 142 76% 36%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 43 96% 56%;
-  --secondary-foreground: 24 10% 10%;
-  --muted: 43 50% 90%;
-  --muted-foreground: 24 10% 40%;
-  --accent: 43 96% 56%;
-  --accent-foreground: 24 10% 10%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 43 50% 80%;
-  --input: 43 50% 80%;
-  --ring: 142 76% 36%;
-  --radius: 0.75rem;
-}
-
 body {
   font-family: 'Inter', sans-serif;
   background-color: #FEF4E0;
 }
 
-/* Bungee font for headings */
-.font-bungee {
-  font-family: 'Bungee', cursive;
+/* Range slider styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  outline: none;
 }
 
-/* Photo Filter Effect */
-.plant-photo-filter {
-  filter: saturate(0.85) contrast(1.05) brightness(0.98) sepia(0.1);
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: #1e3a5f;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: #1e3a5f;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
 /* Custom scrollbar */
@@ -52,43 +53,11 @@ body {
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #22c55e;
+  background: #1e3a5f;
 }
 
 /* Selection color */
 ::selection {
   background-color: #22c55e;
   color: white;
-}
-
-/* Range slider styling */
-input[type="range"] {
-  -webkit-appearance: none;
-  appearance: none;
-  height: 8px;
-  background: #e8dcc8;
-  border-radius: 4px;
-  outline: none;
-}
-
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  background: #22c55e;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 2px solid white;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-input[type="range"]::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  background: #22c55e;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 2px solid white;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
