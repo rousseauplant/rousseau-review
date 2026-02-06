@@ -3,189 +3,299 @@ import { Upload, Sun, Zap, Check } from 'lucide-react';
 import { supabase } from './lib/supabase';
 
 const LIGHT_ZONES = [
-  { id: 'high', label: 'HIGH GROWTH ZONE', desc: 'Bright enough for plants to actively thrive', bg: 'bg-blue-900', dot: 'bg-green-500', text: 'text-white' },
-  { id: 'low', label: 'LOW GROWTH ZONE', desc: 'Enough for survival + slow growth', bg: 'bg-white', dot: 'bg-yellow-500', text: 'text-gray-900', border: true },
-  { id: 'no', label: 'NO GROWTH ZONE', desc: 'Functionally too dark for real growth', bg: 'bg-white', dot: 'bg-red-500', text: 'text-gray-900', border: true }
+  { 
+    id: 'high', 
+    label: 'HIGH GROWTH ZONE', 
+    description: 'Bright enough for plants to actively thrive',
+    bgClass: 'bg-blue-900',
+    dotClass: 'bg-green-500',
+    textClass: 'text-white'
+  },
+  { 
+    id: 'low', 
+    label: 'LOW GROWTH ZONE', 
+    description: 'Enough for survival + slow growth',
+    bgClass: 'bg-white',
+    dotClass: 'bg-yellow-500',
+    textClass: 'text-gray-900',
+    hasBorder: true
+  },
+  { 
+    id: 'no', 
+    label: 'NO GROWTH ZONE', 
+    description: 'Functionally too dark for real growth',
+    bgClass: 'bg-white',
+    dotClass: 'bg-red-500',
+    textClass: 'text-gray-900',
+    hasBorder: true
+  }
 ];
 
 const DIRECTIONS = ['East', 'West', 'North', 'South', 'Idk'];
-const FEEDING = ['Every watering', 'Every other watering', 'Every 3rd watering', 'Monthly'];
-const SOIL = ['Perlite', 'Pumice', 'Orchid Bark', 'Coco Coir', 'Coco Chunks', 'Tree Fern Fiber', 'Horticultural Charcoal', 'Bio Char', 'Worm Castings', 'Rice Hulls', 'LECA', 'Pon (Lechuza)', 'Zeolite', 'Fluval Stratum', 'Regular Potting Mix', 'Sphagnum Moss', 'Lava Rock', 'Vermiculite'];
+
+const FEEDING_SCHEDULES = [
+  'Every watering',
+  'Every other watering', 
+  'Every 3rd watering',
+  'Monthly'
+];
+
+const SOIL_INGREDIENTS = [
+  'Perlite', 'Pumice', 'Orchid Bark', 'Coco Coir', 'Coco Chunks',
+  'Tree Fern Fiber', 'Horticultural Charcoal', 'Bio Char', 'Worm Castings',
+  'Rice Hulls', 'LECA', 'Pon (Lechuza)', 'Zeolite', 'Fluval Stratum',
+  'Regular Potting Mix', 'Sphagnum Moss', 'Lava Rock', 'Vermiculite'
+];
 
 export default function App() {
-  const [tab, setTab] = useState<'create' | 'gallery'>('create');
+  const [activeTab, setActiveTab] = useState<'create' | 'gallery'>('create');
+  
+  // Form state
   const [photo, setPhoto] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [userName, setUserName] = useState('');
   const [plantName, setPlantName] = useState('');
-  const [hasWindow, setHasWindow] = useState(true);
-  const [direction, setDirection] = useState('South');
-  const [growLights, setGrowLights] = useState(false);
+  const [hasWindowLight, setHasWindowLight] = useState(true);
+  const [windowDirection, setWindowDirection] = useState('South');
+  const [usesGrowLights, setUsesGrowLights] = useState(false);
   const [lightZone, setLightZone] = useState('high');
-  const [temp, setTemp] = useState(72);
+  const [temperature, setTemperature] = useState(72);
   const [humidity, setHumidity] = useState(60);
-  const [feeding, setFeeding] = useState(0);
-  const [foliar, setFoliar] = useState(false);
+  const [feedingSchedule, setFeedingSchedule] = useState(0);
+  const [foliarFeed, setFoliarFeed] = useState(false);
   const [nutrients, setNutrients] = useState('');
-  const [soil, setSoil] = useState<string[]>([]);
-  const [cover, setCover] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [selectedSoil, setSelectedSoil] = useState<string[]>([]);
+  
+  // Output state
+  const [generatedCover, setGeneratedCover] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [covers, setCovers] = useState<any[]>([]);
-  const fileRef = useRef<HTMLInputElement>(null);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  useEffect(() => { fetchCovers(); }, []);
-  
+  useEffect(() => {
+    fetchCovers();
+  }, []);
+
   const fetchCovers = async () => {
-    const { data } = await supabase.from('covers').select('*').eq('is_hidden', false).order('created_at', { ascending: false });
+    const { data } = await supabase
+      .from('covers')
+      .select('*')
+      .eq('is_hidden', false)
+      .order('created_at', { ascending: false });
     if (data) setCovers(data);
   };
-  
-  const toggleSoil = (s: string) => setSoil(p => p.includes(s) ? p.filter(x => x !== s) : [...p, s]);
-  
-  const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (f) { 
-      setPhotoFile(f); 
-      const r = new FileReader(); 
-      r.onloadend = () => setPhoto(r.result as string); 
-      r.readAsDataURL(f); 
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPhotoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setPhoto(reader.result as string);
+      reader.readAsDataURL(file);
     }
   };
 
-  const generate = async () => {
+  const toggleSoilIngredient = (ingredient: string) => {
+    setSelectedSoil(prev => 
+      prev.includes(ingredient) 
+        ? prev.filter(i => i !== ingredient)
+        : [...prev, ingredient]
+    );
+  };
+
+  const generateCover = async () => {
     if (!photo || !plantName) return;
-    setLoading(true);
-    
-    const canvas = canvasRef.current!;
-    const ctx = canvas.getContext('2d')!;
-    canvas.width = 500;
-    canvas.height = 700;
+    setIsGenerating(true);
 
-    // Background
-    ctx.fillStyle = '#FEF4E0';
-    ctx.fillRect(0, 0, 500, 700);
+    try {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
 
-    // Borders
-    ctx.strokeStyle = '#22c55e';
-    ctx.lineWidth = 6;
-    ctx.strokeRect(8, 8, 484, 684);
-    ctx.strokeStyle = '#d97706';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(16, 16, 468, 668);
+      // Set canvas size
+      canvas.width = 500;
+      canvas.height = 700;
 
-    // Title
-    ctx.fillStyle = '#1e3a5f';
-    ctx.font = 'bold 32px Bungee, Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('ROUSSEAU', 250, 55);
-    ctx.fillStyle = '#22c55e';
-    ctx.font = 'bold 24px Bungee, Arial';
-    ctx.fillText('REVIEW', 250, 85);
+      // Background
+      ctx.fillStyle = '#FEF4E0';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Photo
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = photo; });
-    ctx.drawImage(img, 30, 105, 440, 320);
+      // Outer green border
+      ctx.strokeStyle = '#22c55e';
+      ctx.lineWidth = 6;
+      ctx.strokeRect(8, 8, canvas.width - 16, canvas.height - 16);
 
-    // Plant name
-    const name = userName ? `${userName.toUpperCase()}'S ${plantName.toUpperCase()}` : plantName.toUpperCase();
-    ctx.fillStyle = '#1e3a5f';
-    ctx.font = 'bold 22px Bungee, Arial';
-    const words = name.split(' ');
-    let line = '', y = 470;
-    for (const w of words) {
-      const test = line + w + ' ';
-      if (ctx.measureText(test).width > 440 && line) {
-        ctx.fillText(line, 250, y);
-        line = w + ' ';
-        y += 28;
-      } else line = test;
-    }
-    ctx.fillText(line, 250, y);
+      // Inner amber border
+      ctx.strokeStyle = '#d97706';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(16, 16, canvas.width - 32, canvas.height - 32);
 
-    // Care info
-    y += 35;
-    ctx.fillStyle = '#22c55e';
-    ctx.font = 'bold 12px Inter, Arial';
-    ctx.fillText('CARE GUIDE', 250, y);
-    ctx.fillStyle = '#4b5563';
-    ctx.font = '11px Inter, Arial';
-    const zone = LIGHT_ZONES.find(z => z.id === lightZone);
-    ctx.fillText(`${zone?.label} | ${temp}°F | ${humidity}% Humidity`, 250, y + 18);
-    ctx.fillText(`Feed: ${FEEDING[feeding]}`, 250, y + 32);
-    if (soil.length) ctx.fillText(`Soil: ${soil.slice(0, 3).join(', ')}${soil.length > 3 ? '...' : ''}`, 250, y + 46);
-    if (foliar) { ctx.fillStyle = '#22c55e'; ctx.fillText('Foliar Feed Recommended', 250, y + 60); }
+      // Title
+      ctx.fillStyle = '#1e3a5f';
+      ctx.font = 'bold 32px "Bungee", Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('ROUSSEAU', canvas.width / 2, 55);
 
-    // Footer
-    ctx.fillStyle = '#9ca3af';
-    ctx.font = '9px Inter, Arial';
-    ctx.fillText('Powered by Rousseau Plant Care', 250, 675);
+      ctx.fillStyle = '#22c55e';
+      ctx.font = 'bold 24px "Bungee", Arial, sans-serif';
+      ctx.fillText('REVIEW', canvas.width / 2, 85);
 
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-    setCover(dataUrl);
+      // Load and draw photo
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = photo;
+      });
 
-    if (photoFile) {
-      const fd = new FormData();
-      fd.append('file', photoFile);
-      fd.append('upload_preset', 'rousseau_covers');
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
-      const d = await res.json();
-      if (d.secure_url) {
-        await supabase.from('covers').insert({
-          plant_name: plantName,
-          image_url: d.secure_url,
-          light_zone: lightZone,
-          watering_interval: FEEDING[feeding],
-          temperature: temp,
-          humidity,
-          soil_mix: soil.join(', '),
-          foliar_feed: foliar,
-          nutrients: nutrients || null,
-          cover_data_url: dataUrl
-        } as any);
-        fetchCovers();
+      ctx.drawImage(img, 30, 105, 440, 320);
+
+      // Plant name
+      const displayName = userName 
+        ? `${userName.toUpperCase()}'S ${plantName.toUpperCase()}`
+        : plantName.toUpperCase();
+      
+      ctx.fillStyle = '#1e3a5f';
+      ctx.font = 'bold 22px "Bungee", Arial, sans-serif';
+      
+      // Wrap text
+      const maxWidth = 440;
+      const words = displayName.split(' ');
+      let line = '';
+      let y = 470;
+      
+      for (let i = 0; i < words.length && y < 540; i++) {
+        const testLine = line + words[i] + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && i > 0) {
+          ctx.fillText(line, canvas.width / 2, y);
+          line = words[i] + ' ';
+          y += 28;
+        } else {
+          line = testLine;
+        }
       }
+      ctx.fillText(line, canvas.width / 2, y);
+
+      // Care info
+      const careY = y + 35;
+      ctx.fillStyle = '#22c55e';
+      ctx.font = 'bold 12px Inter, Arial, sans-serif';
+      ctx.fillText('CARE GUIDE', canvas.width / 2, careY);
+
+      ctx.fillStyle = '#4b5563';
+      ctx.font = '11px Inter, Arial, sans-serif';
+      
+      const zoneInfo = LIGHT_ZONES.find(z => z.id === lightZone);
+      ctx.fillText(`${zoneInfo?.label} | ${temperature}°F | ${humidity}% Humidity`, canvas.width / 2, careY + 18);
+      ctx.fillText(`Feed: ${FEEDING_SCHEDULES[feedingSchedule]}`, canvas.width / 2, careY + 32);
+      
+      if (selectedSoil.length > 0) {
+        const soilText = selectedSoil.slice(0, 3).join(', ') + (selectedSoil.length > 3 ? '...' : '');
+        ctx.fillText(`Soil: ${soilText}`, canvas.width / 2, careY + 46);
+      }
+      
+      if (foliarFeed) {
+        ctx.fillStyle = '#22c55e';
+        ctx.fillText('Foliar Feed Recommended', canvas.width / 2, careY + (selectedSoil.length > 0 ? 60 : 46));
+      }
+
+      // Footer
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '9px Inter, Arial, sans-serif';
+      ctx.fillText('Powered by Rousseau Plant Care', canvas.width / 2, canvas.height - 25);
+
+      const coverDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      setGeneratedCover(coverDataUrl);
+
+      // Upload to Cloudinary and save to Supabase
+      if (photoFile) {
+        const formData = new FormData();
+        formData.append('file', photoFile);
+        formData.append('upload_preset', 'rousseau_covers');
+
+        const response = await fetch(
+          `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
+          { method: 'POST', body: formData }
+        );
+
+        const data = await response.json();
+        
+        if (data.secure_url) {
+          await supabase.from('covers').insert({
+            plant_name: plantName,
+            image_url: data.secure_url,
+            light_zone: lightZone,
+            watering_interval: FEEDING_SCHEDULES[feedingSchedule],
+            temperature,
+            humidity,
+            soil_mix: selectedSoil.join(', '),
+            foliar_feed: foliarFeed,
+            nutrients: nutrients || null,
+            cover_data_url: coverDataUrl,
+          } as any);
+          fetchCovers();
+        }
+      }
+    } catch (error) {
+      console.error('Error generating cover:', error);
+    } finally {
+      setIsGenerating(false);
     }
-    setLoading(false);
   };
 
-  const download = () => {
-    if (cover) {
-      const a = document.createElement('a');
-      a.href = cover;
-      a.download = `rousseau-${plantName}.jpg`;
-      a.click();
+  const downloadCover = () => {
+    if (generatedCover) {
+      const link = document.createElement('a');
+      link.href = generatedCover;
+      link.download = `rousseau-review-${plantName}.jpg`;
+      link.click();
     }
   };
 
-  // Gallery View
-  if (tab === 'gallery') {
+  // Gallery view
+  if (activeTab === 'gallery') {
     return (
-      <div className="min-h-screen" style={{ background: '#FEF4E0' }}>
+      <div className="min-h-screen" style={{ backgroundColor: '#FEF4E0' }}>
         <header className="bg-white border-b border-amber-200">
           <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
             <div>
-              <span className="text-2xl font-bold text-blue-900" style={{ fontFamily: 'Bungee' }}>ROUSSEAU</span>
+              <span className="text-2xl font-bold text-blue-900" style={{ fontFamily: 'Bungee, sans-serif' }}>ROUSSEAU</span>
               <span className="text-sm text-gray-600 ml-2">PLANT CARE</span>
             </div>
-            <button onClick={() => setTab('create')} className="text-blue-900 hover:underline font-medium">Create Cover</button>
+            <button 
+              onClick={() => setActiveTab('create')} 
+              className="text-blue-900 hover:underline font-medium"
+            >
+              Create Cover
+            </button>
           </div>
         </header>
         <main className="max-w-6xl mx-auto px-6 py-8">
-          <h2 className="text-3xl font-bold text-blue-900 mb-8" style={{ fontFamily: 'Bungee' }}>Community Gallery</h2>
+          <h2 className="text-3xl font-bold text-blue-900 mb-8" style={{ fontFamily: 'Bungee, sans-serif' }}>
+            Community Gallery
+          </h2>
           {covers.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-xl">
-              <p className="text-gray-500">No covers yet. Be the first!</p>
+            <div className="text-center py-16 bg-white rounded-xl shadow-sm">
+              <p className="text-gray-500">No covers yet. Be the first to create one!</p>
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {covers.map(c => (
-                <div key={c.id} className="bg-white rounded-xl shadow-lg overflow-hidden">
-                  <img src={c.cover_data_url || c.image_url} alt={c.plant_name} className="w-full aspect-[3/4] object-cover" />
+              {covers.map((cover) => (
+                <div key={cover.id} className="bg-white rounded-xl shadow-lg overflow-hidden">
+                  <img 
+                    src={cover.cover_data_url || cover.image_url} 
+                    alt={cover.plant_name} 
+                    className="w-full aspect-[3/4] object-cover" 
+                  />
                   <div className="p-4">
-                    <h3 className="font-bold text-blue-900" style={{ fontFamily: 'Bungee' }}>{c.plant_name}</h3>
+                    <h3 className="font-bold text-blue-900" style={{ fontFamily: 'Bungee, sans-serif' }}>
+                      {cover.plant_name}
+                    </h3>
                   </div>
                 </div>
               ))}
@@ -196,43 +306,54 @@ export default function App() {
     );
   }
 
-  // Create View
+  // Create view
   return (
-    <div className="min-h-screen" style={{ background: '#FEF4E0' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#FEF4E0' }}>
       {/* Header */}
       <header className="bg-white border-b border-amber-200">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
           <div>
-            <span className="text-2xl font-bold text-blue-900" style={{ fontFamily: 'Bungee' }}>ROUSSEAU</span>
+            <span className="text-2xl font-bold text-blue-900" style={{ fontFamily: 'Bungee, sans-serif' }}>
+              ROUSSEAU
+            </span>
             <span className="text-sm text-gray-600 ml-2">PLANT CARE</span>
           </div>
-          <button onClick={() => setTab('gallery')} className="text-blue-900 hover:underline font-medium">Browse Gallery</button>
+          <button 
+            onClick={() => setActiveTab('gallery')} 
+            className="text-blue-900 hover:underline font-medium"
+          >
+            Browse Gallery
+          </button>
         </div>
       </header>
 
       {/* Hero */}
       <div className="text-center py-8">
-        <span className="inline-block bg-amber-100 text-amber-700 text-xs font-bold px-3 py-1 rounded-full mb-4">FREE TOOL</span>
-        <h1 className="text-4xl font-bold text-blue-900 mb-2" style={{ fontFamily: 'Bungee' }}>CREATE YOUR COVER</h1>
+        <span className="inline-block bg-amber-100 text-amber-700 text-xs font-bold px-3 py-1 rounded-full mb-4">
+          FREE TOOL
+        </span>
+        <h1 className="text-4xl font-bold text-blue-900 mb-2" style={{ fontFamily: 'Bungee, sans-serif' }}>
+          CREATE YOUR COVER
+        </h1>
         <p className="text-gray-600">Feature your plant in the Rousseau Review</p>
       </div>
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-6 pb-12">
         <div className="grid lg:grid-cols-2 gap-8">
-          {/* Form */}
+          {/* Form Column */}
           <div className="bg-white rounded-xl shadow-lg p-6">
-            {/* Photo */}
+            {/* Photo Upload */}
             <div className="mb-6">
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Plant Photo <span className="text-red-500">*</span>
               </label>
               <div 
-                onClick={() => fileRef.current?.click()} 
+                onClick={() => fileInputRef.current?.click()}
                 className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-900 hover:bg-blue-50 transition-all"
               >
                 {photo ? (
-                  <img src={photo} alt="" className="max-h-48 mx-auto rounded-lg" />
+                  <img src={photo} alt="Preview" className="max-h-48 mx-auto rounded-lg" />
                 ) : (
                   <div className="text-gray-400">
                     <Upload className="w-10 h-10 mx-auto mb-2" />
@@ -240,7 +361,13 @@ export default function App() {
                   </div>
                 )}
               </div>
-              <input ref={fileRef} type="file" accept="image/*" onChange={handlePhoto} className="hidden" />
+              <input 
+                ref={fileInputRef} 
+                type="file" 
+                accept="image/*" 
+                onChange={handlePhotoUpload} 
+                className="hidden" 
+              />
             </div>
 
             {/* Your Name */}
@@ -249,10 +376,10 @@ export default function App() {
               <p className="text-xs text-gray-500 mb-2">Appears on your cover (e.g., &quot;SARAH&apos;S MONSTERA&quot;)</p>
               <input 
                 type="text" 
-                value={userName} 
-                onChange={e => setUserName(e.target.value)} 
-                placeholder="e.g., Sarah" 
-                className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-900 focus:outline-none" 
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                placeholder="e.g., Sarah"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-900 focus:outline-none"
               />
             </div>
 
@@ -262,10 +389,10 @@ export default function App() {
               <p className="text-xs text-gray-500 mb-2">What plant are you featuring?</p>
               <input 
                 type="text" 
-                value={plantName} 
-                onChange={e => setPlantName(e.target.value)} 
-                placeholder="e.g., Monstera Deliciosa" 
-                className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-900 focus:outline-none" 
+                value={plantName}
+                onChange={(e) => setPlantName(e.target.value)}
+                placeholder="e.g., Monstera Deliciosa"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-900 focus:outline-none"
               />
             </div>
 
@@ -274,68 +401,72 @@ export default function App() {
               <label className="block text-sm font-semibold text-gray-700 mb-3">
                 Light Zone <span className="text-red-500">*</span>
               </label>
-
+              
+              {/* Window light checkbox */}
               <label className="flex items-center gap-2 mb-3 cursor-pointer">
                 <input 
                   type="checkbox" 
-                  checked={hasWindow} 
-                  onChange={e => setHasWindow(e.target.checked)} 
-                  className="w-4 h-4 text-blue-900 rounded" 
+                  checked={hasWindowLight}
+                  onChange={(e) => setHasWindowLight(e.target.checked)}
+                  className="w-4 h-4 text-blue-900 rounded"
                 />
                 <Sun className="w-4 h-4 text-amber-500" />
                 <span className="text-sm">Gets natural light from a window</span>
               </label>
 
-              {hasWindow && (
+              {/* Direction buttons */}
+              {hasWindowLight && (
                 <div className="ml-6 mb-4">
                   <p className="text-xs text-gray-500 mb-2">Which direction?</p>
                   <div className="flex flex-wrap gap-2">
-                    {DIRECTIONS.map(d => (
+                    {DIRECTIONS.map((dir) => (
                       <button 
-                        key={d} 
-                        onClick={() => setDirection(d)} 
+                        key={dir}
+                        onClick={() => setWindowDirection(dir)}
                         className={`px-4 py-2 text-sm rounded border transition-all ${
-                          direction === d 
+                          windowDirection === dir 
                             ? 'bg-blue-900 text-white border-blue-900' 
                             : 'bg-white text-gray-700 border-gray-300 hover:border-blue-900'
                         }`}
                       >
-                        {d}
+                        {dir}
                       </button>
                     ))}
                   </div>
                 </div>
               )}
 
+              {/* Grow lights checkbox */}
               <label className="flex items-center gap-2 mb-4 cursor-pointer">
                 <input 
                   type="checkbox" 
-                  checked={growLights} 
-                  onChange={e => setGrowLights(e.target.checked)} 
-                  className="w-4 h-4 text-blue-900 rounded" 
+                  checked={usesGrowLights}
+                  onChange={(e) => setUsesGrowLights(e.target.checked)}
+                  className="w-4 h-4 text-blue-900 rounded"
                 />
                 <Zap className="w-4 h-4 text-amber-500" />
                 <span className="text-sm">Uses grow lights</span>
               </label>
 
+              {/* Light zone selection */}
               <p className="text-xs text-gray-500 mb-2">Select your light zone:</p>
               <div className="space-y-2">
-                {LIGHT_ZONES.map(z => (
+                {LIGHT_ZONES.map((zone) => (
                   <button 
-                    key={z.id} 
-                    onClick={() => setLightZone(z.id)} 
+                    key={zone.id}
+                    onClick={() => setLightZone(zone.id)}
                     className={`w-full p-3 rounded-lg text-left transition-all ${
-                      lightZone === z.id 
-                        ? `${z.bg} ${z.text}` 
+                      lightZone === zone.id 
+                        ? `${zone.bgClass} ${zone.textClass}` 
                         : 'bg-white border border-gray-200 hover:border-blue-900'
-                    } ${z.border && lightZone !== z.id ? 'border border-gray-200' : ''}`}
+                    } ${zone.hasBorder && lightZone !== zone.id ? 'border border-gray-200' : ''}`}
                   >
                     <div className="flex items-center gap-2">
-                      <span className={`w-3 h-3 rounded-full ${z.dot}`} />
-                      <span className="font-bold text-sm">{z.label}</span>
+                      <span className={`w-3 h-3 rounded-full ${zone.dotClass}`} />
+                      <span className="font-bold text-sm">{zone.label}</span>
                     </div>
-                    <p className={`text-xs mt-1 ${lightZone === z.id ? 'text-white/80' : 'text-gray-500'}`}>
-                      {z.desc}
+                    <p className={`text-xs mt-1 ${lightZone === zone.id ? 'text-white/80' : 'text-gray-500'}`}>
+                      {zone.description}
                     </p>
                   </button>
                 ))}
@@ -344,64 +475,68 @@ export default function App() {
 
             {/* Temperature */}
             <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Average Temperature (°F)</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Average Temperature (°F)
+              </label>
               <div className="flex items-center gap-4">
                 <input 
                   type="range" 
-                  value={temp} 
-                  onChange={e => setTemp(Number(e.target.value))} 
+                  value={temperature}
+                  onChange={(e) => setTemperature(Number(e.target.value))}
                   min={50} 
-                  max={95} 
-                  className="flex-1 accent-blue-900" 
+                  max={95}
+                  className="flex-1 accent-blue-900"
                 />
-                <span className="text-lg font-bold text-blue-900 w-16">{temp}°F</span>
+                <span className="text-lg font-bold text-blue-900 w-16">{temperature}°F</span>
               </div>
             </div>
 
             {/* Humidity */}
             <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Average Humidity (%)</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Average Humidity (%)
+              </label>
               <div className="flex items-center gap-4">
                 <input 
                   type="range" 
-                  value={humidity} 
-                  onChange={e => setHumidity(Number(e.target.value))} 
+                  value={humidity}
+                  onChange={(e) => setHumidity(Number(e.target.value))}
                   min={20} 
-                  max={90} 
-                  step={5} 
-                  className="flex-1 accent-blue-900" 
+                  max={90}
+                  step={5}
+                  className="flex-1 accent-blue-900"
                 />
                 <span className="text-lg font-bold text-blue-900 w-16">{humidity}%</span>
               </div>
             </div>
 
-            {/* Feeding */}
+            {/* Feeding Schedule */}
             <div className="mb-6">
               <label className="block text-sm font-semibold text-gray-700 mb-3">Feeding Schedule</label>
               <div className="space-y-2">
-                {FEEDING.map((f, i) => (
-                  <label key={f} className="flex items-center gap-2 cursor-pointer">
+                {FEEDING_SCHEDULES.map((schedule, index) => (
+                  <label key={schedule} className="flex items-center gap-2 cursor-pointer">
                     <input 
                       type="radio" 
-                      name="feed" 
-                      checked={feeding === i} 
-                      onChange={() => setFeeding(i)} 
-                      className="w-4 h-4 text-blue-900" 
+                      name="feeding"
+                      checked={feedingSchedule === index}
+                      onChange={() => setFeedingSchedule(index)}
+                      className="w-4 h-4 text-blue-900"
                     />
-                    <span className="text-sm">{f}</span>
+                    <span className="text-sm">{schedule}</span>
                   </label>
                 ))}
               </div>
             </div>
 
-            {/* Foliar */}
+            {/* Foliar Feed */}
             <div className="mb-6">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input 
                   type="checkbox" 
-                  checked={foliar} 
-                  onChange={e => setFoliar(e.target.checked)} 
-                  className="w-4 h-4 text-blue-900 rounded" 
+                  checked={foliarFeed}
+                  onChange={(e) => setFoliarFeed(e.target.checked)}
+                  className="w-4 h-4 text-blue-900 rounded"
                 />
                 <span className="text-sm">I foliar feed</span>
               </label>
@@ -409,45 +544,51 @@ export default function App() {
 
             {/* Nutrients */}
             <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-1">What nutrients do you use?</label>
-              <p className="text-xs text-gray-500 mb-2">Only Rousseau products (Aroid Food, Healthy Leaf, Healthy Root) appear on covers</p>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                What nutrients do you use?
+              </label>
+              <p className="text-xs text-gray-500 mb-2">
+                Only Rousseau products (Aroid Food, Healthy Leaf, Healthy Root) appear on covers
+              </p>
               <input 
                 type="text" 
-                value={nutrients} 
-                onChange={e => setNutrients(e.target.value)} 
-                className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-900 focus:outline-none" 
+                value={nutrients}
+                onChange={(e) => setNutrients(e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-900 focus:outline-none"
               />
             </div>
 
-            {/* Soil */}
+            {/* Soil Mix */}
             <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-3">What&apos;s in your soil mix?</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                What&apos;s in your soil mix?
+              </label>
               <div className="grid grid-cols-2 gap-2">
-                {SOIL.map(s => (
+                {SOIL_INGREDIENTS.map((ingredient) => (
                   <button 
-                    key={s} 
-                    onClick={() => toggleSoil(s)} 
+                    key={ingredient}
+                    onClick={() => toggleSoilIngredient(ingredient)}
                     className={`flex items-center gap-2 p-2 rounded border text-left text-sm transition-all ${
-                      soil.includes(s) 
+                      selectedSoil.includes(ingredient) 
                         ? 'border-blue-900 bg-blue-50 text-blue-900' 
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    {soil.includes(s) && <Check className="w-4 h-4" />}
-                    <span>{s}</span>
+                    {selectedSoil.includes(ingredient) && <Check className="w-4 h-4" />}
+                    <span>{ingredient}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Generate */}
+            {/* Generate Button */}
             <button 
-              onClick={generate} 
-              disabled={!photo || !plantName || loading} 
-              className="w-full bg-blue-900 hover:bg-blue-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-lg transition-all" 
-              style={{ fontFamily: 'Bungee' }}
+              onClick={generateCover}
+              disabled={!photo || !plantName || isGenerating}
+              className="w-full bg-blue-900 hover:bg-blue-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-lg transition-all"
+              style={{ fontFamily: 'Bungee, sans-serif' }}
             >
-              {loading ? 'Generating...' : 'Generate Cover'}
+              {isGenerating ? 'Generating...' : 'Generate Cover'}
             </button>
 
             <p className="text-center text-sm text-gray-500 mt-4">
@@ -455,15 +596,21 @@ export default function App() {
             </p>
           </div>
 
-          {/* Preview */}
+          {/* Preview Column */}
           <div>
             <div className="bg-white rounded-xl shadow-lg p-6 sticky top-6">
-              <h3 className="text-lg font-bold text-blue-900 mb-4" style={{ fontFamily: 'Bungee' }}>Preview</h3>
-              {cover ? (
+              <h3 className="text-lg font-bold text-blue-900 mb-4" style={{ fontFamily: 'Bungee, sans-serif' }}>
+                Preview
+              </h3>
+              {generatedCover ? (
                 <div className="space-y-4">
-                  <img src={cover} alt="Cover" className="w-full rounded-lg shadow-xl" />
+                  <img 
+                    src={generatedCover} 
+                    alt="Generated cover" 
+                    className="w-full rounded-lg shadow-xl" 
+                  />
                   <button 
-                    onClick={download} 
+                    onClick={downloadCover}
                     className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg transition-all"
                   >
                     Download Cover
@@ -482,6 +629,7 @@ export default function App() {
         </div>
       </main>
 
+      {/* Hidden canvas for generation */}
       <canvas ref={canvasRef} className="hidden" />
     </div>
   );
