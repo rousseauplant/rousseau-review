@@ -1,41 +1,43 @@
-@import url('https://fonts.googleapis.com/css2?family=Bungee&family=Caveat:wght@500&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 142 76% 36%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 142 76% 36%;
-    --radius: 0.5rem;
-  }
+:root {
+  --background: 48 100% 96%;
+  --foreground: 24 10% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 24 10% 10%;
+  --primary: 142 76% 36%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 43 96% 56%;
+  --secondary-foreground: 24 10% 10%;
+  --muted: 43 50% 90%;
+  --muted-foreground: 24 10% 40%;
+  --accent: 43 96% 56%;
+  --accent-foreground: 24 10% 10%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 43 50% 80%;
+  --input: 43 50% 80%;
+  --ring: 142 76% 36%;
+  --radius: 0.75rem;
 }
 
 body {
   font-family: 'Inter', sans-serif;
+  background-color: #FEF4E0;
+}
+
+/* Bungee font for headings */
+.font-bungee {
+  font-family: 'Bungee', cursive;
 }
 
 /* Photo Filter Effect */
 .plant-photo-filter {
-  filter: saturate(0.75) contrast(1.05) brightness(0.98);
+  filter: saturate(0.85) contrast(1.05) brightness(0.98) sepia(0.1);
 }
 
 /* Custom scrollbar */
@@ -43,10 +45,10 @@ body {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #1a1a1a;
+  background: #FEF4E0;
 }
 ::-webkit-scrollbar-thumb {
-  background: #333;
+  background: #d4c4a8;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
@@ -57,4 +59,36 @@ body {
 ::selection {
   background-color: #22c55e;
   color: white;
+}
+
+/* Range slider styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  background: #e8dcc8;
+  border-radius: 4px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #22c55e;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #22c55e;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }

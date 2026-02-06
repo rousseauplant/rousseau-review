@@ -10,7 +10,7 @@ export interface Cover {
   foliar_feed: boolean;
   nutrients: string | null;
   cover_data_url: string | null;
-  hidden: boolean;
+  is_hidden: boolean;
   created_at: string;
 }
 
