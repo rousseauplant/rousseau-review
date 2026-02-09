@@ -314,7 +314,8 @@ export default function App() {
       fd.append('upload_preset', 'rousseau_covers');
       
       try {
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`, {
+        const cloudName = (import.meta as any).env?.VITE_CLOUDINARY_CLOUD_NAME || 'dk7tsjufx';
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
           method: 'POST',
           body: fd
         });
